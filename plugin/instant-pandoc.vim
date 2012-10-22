@@ -1,6 +1,5 @@
 function! PandocStart()
-  silent !instant-pandoc-d &>/dev/null &
-  silent !simple_browser &>/dev/null &
+  silent !nw /home/js947/.vim/bundle/vim-instant-pandoc/bin &>/dev/null &
 endfunction
 
 function! PandocUpdate()

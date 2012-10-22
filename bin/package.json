@@ -1,0 +1,7 @@
+{
+  "name": "instant pandoc",
+  "window": {
+    "toolbar": false
+  },
+  "main": "index.html"
+}
