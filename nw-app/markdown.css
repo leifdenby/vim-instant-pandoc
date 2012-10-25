@@ -73,8 +73,43 @@ dd { margin: 0 0 0 2em; }
 
 img { border: 0; -ms-interpolation-mode: bicubic; vertical-align: middle; }
 
-table { border-collapse: collapse; border-spacing: 0; }
-td { vertical-align: top; }
+table
+{
+	border-spacing: 0px;
+	border: 1px solid #000000;
+	border-collapse: collapse;
+	border-top: none;
+}
+
+caption
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 18px;
+	padding: 10px;
+	text-align: center;
+	caption-side: top;
+	border: 1px solid #000000;
+	border-bottom: none;
+}
+th
+{
+	padding: 15px 10px 10px 10px;
+	font-weight: normal;
+	font-size: 14px;
+}
+tbody
+{
+	background: #efefef;
+}
+td
+{
+	padding: 10px;
+	border-top: 1px dashed #fff;
+}
+tbody tr:hover td
+{
+	background: #e0e0e0;
+}
 
 @media only screen and (min-width: 480px) {
 body{font-size:14px;}

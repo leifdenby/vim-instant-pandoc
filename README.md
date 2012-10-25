@@ -43,12 +43,7 @@ your
 `~/.vim/bundle` directory,
 
     cd ~/.vim/bundle
-    git clone git://github.com/js947/vim-gnuplot.git
-
-In order to make the plugin work, a few more steps are required. Edit 
-`plugin/vim-instant-pandoc.vim` to get the correct path to the `bin` directory. 
-Also edit `plugin/vim-instant-pandoc.vim` to give the proper location of your 
-bibliography and csl style files.
+    git clone git://github.com/leifdenby/git-instant-pandoc.git
 
   [Pathogen]: https://github.com/tpope/vim-pathogen
 
