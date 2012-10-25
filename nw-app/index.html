@@ -1,0 +1,130 @@
+<html>
+<head>
+  <title></title>
+  <meta charset="utf-8">
+
+  <link type="text/css" href="markdown.css" media="screen" rel="stylesheet" />
+
+  <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  <script type="text/javascript" src="jquery.min.js"></script>
+  <script type="text/javascript" src="jquery.ba-replacetext.min.js"></script>
+  <script type="text/javascript">
+
+MathJax.Hub.Config({ tex2jax: { inlineMath: [['$','$'], ["\\(","\\)"]], processEscapes: true } });
+
+var server = require('http').createServer(httpHandler);
+var spawn = require('child_process').spawn
+
+function httpHandler(req, res){
+  switch(req.method)
+  {
+  case 'PUT':
+    console.log('received PUT');
+
+    var pandoc_args = [ '-t'
+        , 'html5'
+        , '--smart'
+        , '--mathjax'
+        ];
+
+    if (typeof process.env.INSTANT_PANDOC_BIBLIOGRAPHY_PATH !== 'undefined') {
+        pandoc_args.push('--bibliography=' + process.env.INSTANT_PANDOC_BIBLIOGRAPHY_PATH);
+    }
+    if (typeof process.env.INSTANT_PANDOC_CSL_PATH !== 'undefined') {
+        pandoc_args.push('--csl=' + process.env.INSTANT_PANDOC_CSL_PATH);
+    }
+    if (typeof process.env.INSTANT_PANDOC_BIN_PATH !== 'undefined') {
+      pandoc_path = process.env.INSTANT_PANDOC_BIN_PATH;
+    }
+    else {
+      pandoc_path = "pandoc"
+    }
+
+    console.log(pandoc_path);
+    console.log(pandoc_args);
+
+
+    var pandoc = spawn(pandoc_path, pandoc_args);
+
+    var newHTML = '';
+    var data_from_vim = '';
+
+    req.on('data', function(chunk) {
+        data_from_vim += chunk;
+        });
+    req.on('end', function() {
+        pandoc.stdin.write(data_from_vim);
+        pandoc.stdin.end();
+        res.writeHead(200);
+        res.end();
+        });
+
+    pandoc.stdout.on('data', function (data) {
+        update_body(data);
+        });
+    pandoc.stderr.on('data', function (data) {
+        console.log('pandoc stderr: ' + data);
+        });
+    break;
+
+  case 'DELETE':
+    req.on('end', function() {
+      res.writeHead(200);
+      res.end();
+      });
+    window.close();
+
+  default:
+    break;
+  }
+}
+
+var cursor_string = 'cc_cursor_rr';
+
+function update_body(new_content) {
+  document.body.innerHTML = new_content;
+  var el_group = $(':contains("'+cursor_string+'")');
+  el_group.replaceText(cursor_string,'');
+  MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+
+  var el_with_cursor = el_group.filter('li,div,span,p,h1,h2,h3,h4,h5,caption');
+  if (el_with_cursor.offset() != undefined) {
+    MathJax.Hub.Queue(function() {
+        scrollToElement(el_with_cursor);
+        });
+  }
+}
+
+function scrollToElement(el){
+  var scroll_height_new = -1;
+  var viewport_height = window.innerHeight;
+  var document_height = $(document).height();
+
+  var viewport_top = $(window).scrollTop();
+  var element_top = el.offset().top;
+  var element_bottom = element_top + el.height();
+
+  if(viewport_top + viewport_height < element_bottom) {
+    scroll_height_new = element_bottom - viewport_height + 20;
+  }
+  else if (viewport_top > element_top) {
+    scroll_height_new = element_top;
+  }
+  if (scroll_height_new != -1) {
+    $('html,body').animate({scrollTop: scroll_height_new}, 500);
+  }
+}
+
+function init_server() {
+    server.listen(process.env.INSTANT_PANDOC_SERVER_PORT);
+    document.body.innerHTML = "Server listening on port " + process.env.INSTANT_PANDOC_SERVER_PORT + ", waiting for connection...";
+}
+  </script>
+
+</head>
+<body>
+    <script type="text/javascript">
+        init_server();
+    </script>
+</body>
+</html>
