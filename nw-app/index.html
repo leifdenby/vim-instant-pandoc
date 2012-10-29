@@ -39,6 +39,12 @@ function httpHandler(req, res){
     else {
       pandoc_path = "pandoc"
     }
+    if (typeof process.env.PWD !== 'undefined') {
+      document_path = "file://" + process.env.PWD + "/";
+    }
+    else {
+      document_path = undefined;
+    }
 
     console.log(pandoc_path);
     console.log(pandoc_args);
@@ -86,6 +92,7 @@ function update_body(new_content) {
   var el_group = $(':contains("'+cursor_string+'")');
   el_group.replaceText(cursor_string,'');
   MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+  $("img").each( function() { $(this).attr('src', document_path + $(this).attr('src')); } )
 
   var el_with_cursor = el_group.filter('li,div,span,p,h1,h2,h3,h4,h5,caption');
   if (el_with_cursor.offset() != undefined) {
