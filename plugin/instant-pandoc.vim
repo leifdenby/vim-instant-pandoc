@@ -1,4 +1,7 @@
+let s:script_path=expand("<sfile>")
+
 function! PandocUpdate()
+let s:current_file_path = expand("%:p:h")
 python << EOF
 import vim
 
@@ -16,6 +19,7 @@ def get_vim_var(var_name):
     return vim.eval("%s" % var_name)
   else:
     return None
+  
 
 def spawn_server(port):
   import os, sys
@@ -29,11 +33,10 @@ def spawn_server(port):
         os.environ[setting.upper()] = setting_value
   from subprocess import call
   home_path = os.environ["HOME"]
-  # add more paths here if you have installed the vim-plugin somewhere different
   plugin_paths = [
                     os.path.join(home_path,".vim","bundle","vim-instant-pandoc"),
                     ]
-  spawn_success = False
+
   nw_path = get_vim_var("g:instant_pandoc_nw_bin_path")
   if nw_path is None:
     if sys.platform == "darwin":
@@ -41,20 +44,27 @@ def spawn_server(port):
     elif "linux" in sys.platform:
       nw_path = "nw"
 
+  # Set document path (used for image URLs)
+  document_path = get_vim_var("s:current_file_path")
+  os.environ["INSTANT_PANDOC_DOCUMENT_PATH"] = document_path
 
-  for p in plugin_paths:
-    app_path = os.path.join(p, "nw-app")
-    try:
-      if os.path.exists(app_path):
-        if sys.platform == "darwin":
-          call(["open","-a", nw_path, app_path])
-        elif "linux" in sys.platform:
-          call([nw_path, app_path])
-        spawn_success = True
-    except:
-      pass
+  # Get plugin path (so that we node where to find the node-webkit app)
+  plugin_path = os.path.abspath(os.path.join(get_vim_var('s:script_path'), os.path.pardir, os.path.pardir))
+
+  # Try to load the node-webkit viewer
+  app_path = os.path.join(plugin_path, "nw-app")
+  spawn_success = False
+  try:
+    if os.path.exists(app_path):
+      if sys.platform == "darwin":
+        call(["open","-a", nw_path, app_path])
+      elif "linux" in sys.platform:
+        call([nw_path, app_path])
+      spawn_success = True
+  except:
+    pass
   if not spawn_success:
-    raise Exception("Sorry, couldn't find where the vim-instant-pandoc plugin is installed, please add the path manually to the plugin")
+    raise Exception("Sorry, couldn't find where the vim-instant-pandoc plugin is installed (tried %s)" % plugin_path)
 
 
 def port_is_free(port_number):
@@ -100,6 +110,7 @@ except TypeError:
 import httplib
 from time import sleep
 
+
 output_received = False
 attempt_counter = 0
 while not output_received:
@@ -139,5 +150,5 @@ au BufWrite,CursorHold,CursorHoldI *.{markdown,md,mkd,pd,pdk,pandoc,text} silent
 if exists("g:instant_pandoc_update_rate")
   execute "set updatetime=".g:instant_pandoc_update_rate
 else
-  set updatetime=100
+  set updatetime=1000
 endif

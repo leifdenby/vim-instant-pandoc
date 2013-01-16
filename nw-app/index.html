@@ -39,11 +39,15 @@ function httpHandler(req, res){
     else {
       pandoc_path = "pandoc"
     }
+    /*
     if (typeof process.env.PWD !== 'undefined') {
       document_path = "file://" + process.env.PWD + "/";
     }
     else {
       document_path = undefined;
+     */
+    if (typeof process.env.INSTANT_PANDOC_DOCUMENT_PATH !== 'undefined') {
+      document_path = process.env.INSTANT_PANDOC_DOCUMENT_PATH;
     }
 
     console.log(pandoc_path);
@@ -67,15 +71,12 @@ function httpHandler(req, res){
 
     pandoc.stdout.on('data', function (data) {
          newHTML += data;
-		 console.log('pandoc stdout')
         });
     pandoc.stderr.on('data', function (data) {
-        console.log('pandoc stderr: ' + data);
-		});
-	pandoc.on('close', function(code) {
-		console.log('pandoc exit');
-		update_body(newHTML);
-			});
+        });
+    pandoc.on('close', function(code) {
+        update_body(newHTML);
+            });
     break;
 
   case 'DELETE':
@@ -93,13 +94,12 @@ function httpHandler(req, res){
 var cursor_string = 'cc_cursor_rr';
 
 function update_body(new_content) {
-	new_content = "" + new_content;
+    new_content = "" + new_content;
   $('body').html(new_content);
-  console.log(new_content);
  var el_group = $(':contains("'+cursor_string+'")');
  el_group.replaceText(cursor_string,'');
  MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
- $("img").each( function() { $(this).attr('src', document_path + $(this).attr('src')); } )
+ $("img").each( function() { $(this).attr('src', document_path + '/' + $(this).attr('src')); } )
 
  var el_with_cursor = el_group.filter('li,div,span,p,h1,h2,h3,h4,h5,caption');
  if (el_with_cursor.offset() != undefined) {
